@@ -93,6 +93,12 @@ config = {
     'channel': 'ocis-internal',
     'from_secret': 'private_rocketchat',
   },
+  'binaryReleases': {
+    'os': ['linux', 'darwin', 'windows'],
+  },
+  'dockerReleases': {
+    'architectures': ['arm', 'arm64', 'amd64'],
+  },
 }
 
 def getPipelineNames(pipelines=[]):
@@ -126,23 +132,16 @@ def main(ctx):
     testOcisModules(ctx) + \
     testPipelines(ctx)
 
-  stages = [
-    docker(ctx, 'amd64'),
-    docker(ctx, 'arm64'),
-    docker(ctx, 'arm'),
-    dockerEos(ctx),
-    binary(ctx, 'linux'),
-    binary(ctx, 'darwin'),
-    binary(ctx, 'windows'),
-    releaseSubmodule(ctx),
-  ]
+  stages = \
+    dockerReleases(ctx) + \
+    [dockerEos(ctx)] + \
+    binaryReleases(ctx) + \
+    [releaseSubmodule(ctx)]
 
   after = [
-    manifest(ctx),
     changelog(ctx),
-    readme(ctx),
-    badges(ctx),
     docs(ctx),
+    refreshDockerBadges(ctx),
     updateDeployment(ctx),
   ]
 
@@ -761,7 +760,22 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
     },
   }
 
-def docker(ctx, arch):
+def dockerReleases(ctx):
+  pipelines = []
+  for arch in config['dockerReleases']['architectures']:
+    pipelines.append(dockerRelease(ctx, arch))
+
+  manifest = releaseDockerManifest(ctx)
+  manifest['depends_on'] = getPipelineNames(pipelines)
+  pipelines.append(manifest)
+
+  readme = releaseDockerReadme(ctx)
+  readme['depends_on'] = getPipelineNames(pipelines)
+  pipelines.append(readme)
+
+  return pipelines
+
+def dockerRelease(ctx, arch):
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -906,14 +920,21 @@ def dockerEos(ctx):
     },
   }
 
-def binary(ctx, name):
+def binaryReleases(ctx):
+  pipelines = []
+  for os in config['binaryReleases']['os']:
+    pipelines.append(binaryRelease(ctx, os))
+
+  return pipelines
+
+def binaryRelease(ctx, name):
   if ctx.build.event == "tag":
     strip_prefix = 'ocis/dist/release/'
     target = '/ocis/%s/%s' % (ctx.repo.name.replace("ocis-", ""), ctx.build.ref.replace("refs/tags/v", ""))
   else:
     strip_prefix = 'dist/release/'
     target = '/ocis/%s/testing' % (ctx.repo.name.replace("ocis-", ""))
-  
+
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -1090,7 +1111,7 @@ def releaseSubmodule(ctx):
   }
 
 
-def manifest(ctx):
+def releaseDockerManifest(ctx):
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -1116,15 +1137,6 @@ def manifest(ctx):
           'ignore_missing': True,
         },
       },
-    ],
-    'depends_on': [
-      'docker-amd64',
-      'docker-arm64',
-      'docker-arm',
-      'docker-eos-ocis',
-      'binaries-linux',
-      'binaries-darwin',
-      'binaries-windows',
     ],
     'trigger': {
       'ref': [
@@ -1198,9 +1210,6 @@ def changelog(ctx):
         },
       },
     ],
-    'depends_on': [
-      'manifest',
-    ],
     'trigger': {
       'ref': [
         'refs/heads/master',
@@ -1209,7 +1218,7 @@ def changelog(ctx):
     },
   }
 
-def readme(ctx):
+def releaseDockerReadme(ctx):
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -1237,11 +1246,6 @@ def readme(ctx):
         },
       },
     ],
-    'depends_on': [
-      'docker-amd64',
-      'docker-arm64',
-      'docker-arm',
-    ],
     'trigger': {
       'ref': [
         'refs/heads/master',
@@ -1250,7 +1254,7 @@ def readme(ctx):
     },
   }
 
-def badges(ctx):
+def refreshDockerBadges(ctx):
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -1271,18 +1275,13 @@ def badges(ctx):
         },
       },
     ],
-    'depends_on': [
-      'docker-amd64',
-      'docker-arm64',
-      'docker-arm',
-      'docker-eos-ocis',
-    ],
     'trigger': {
       'ref': [
         'refs/heads/master',
         'refs/tags/v*',
       ],
     },
+    'depends_on': getPipelineNames(dockerReleases(ctx)),
   }
 
 def docs(ctx):
@@ -1377,9 +1376,6 @@ def docs(ctx):
         },
       },
     ],
-    'depends_on': [
-      'badges',
-    ],
     'volumes': [
       {
         'name': 'gopath',
@@ -1437,14 +1433,7 @@ def updateDeployment(ctx):
         }
       }
     ],
-    'depends_on': [
-      'docker-amd64',
-      'docker-arm64',
-      'docker-arm',
-      'binaries-linux',
-      'binaries-darwin',
-      'binaries-windows',
-    ],
+    'depends_on': getPipelineNames(dockerReleases(ctx) + binaryReleases(ctx)),
     'trigger': {
       'ref': [
         'refs/heads/master',
