@@ -908,44 +908,12 @@ def dockerEos(ctx):
 
 def binary(ctx, name):
   if ctx.build.event == "tag":
-    settings = {
-      'endpoint': {
-        'from_secret': 's3_endpoint',
-      },
-      'access_key': {
-        'from_secret': 'aws_access_key_id',
-      },
-      'secret_key': {
-        'from_secret': 'aws_secret_access_key',
-      },
-      'bucket': {
-        'from_secret': 's3_bucket',
-      },
-      'path_style': True,
-      'strip_prefix': 'ocis/dist/release/',
-      'source': 'ocis/dist/release/*',
-      'target': '/ocis/%s/%s' % (ctx.repo.name.replace("ocis-", ""), ctx.build.ref.replace("refs/tags/v", "")),
-    }
+    strip_prefix = 'ocis/dist/release/'
+    target = '/ocis/%s/%s' % (ctx.repo.name.replace("ocis-", ""), ctx.build.ref.replace("refs/tags/v", ""))
   else:
-    settings = {
-      'endpoint': {
-        'from_secret': 's3_endpoint',
-      },
-      'access_key': {
-        'from_secret': 'aws_access_key_id',
-      },
-      'secret_key': {
-        'from_secret': 'aws_secret_access_key',
-      },
-      'bucket': {
-        'from_secret': 's3_bucket',
-      },
-      'path_style': True,
-      'strip_prefix': 'dist/release/',
-      'source': 'ocis/dist/release/*',
-      'target': '/ocis/%s/testing' % (ctx.repo.name.replace("ocis-", "")),
-    }
-
+    strip_prefix = 'dist/release/'
+    target = '/ocis/%s/testing' % (ctx.repo.name.replace("ocis-", ""))
+  
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -994,7 +962,24 @@ def binary(ctx, name):
         'name': 'upload',
         'image': 'plugins/s3:1',
         'pull': 'always',
-        'settings': settings,
+        'settings': {
+          'endpoint': {
+            'from_secret': 's3_endpoint',
+          },
+          'access_key': {
+            'from_secret': 'aws_access_key_id',
+          },
+          'secret_key': {
+            'from_secret': 'aws_secret_access_key',
+          },
+          'bucket': {
+            'from_secret': 's3_bucket',
+          },
+          'path_style': True,
+          'strip_prefix': strip_prefix,
+          'source': 'ocis/dist/release/*',
+          'target': target,
+        },
         'when': {
           'ref': [
             'refs/heads/master',
