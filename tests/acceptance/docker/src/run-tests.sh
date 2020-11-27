@@ -66,7 +66,7 @@ then
         echo "non existing storage selected"
         exit 1
     fi
-    
+
     unset DIVIDE_INTO_NUM_PARTS
     unset RUN_PART
 else
@@ -78,7 +78,7 @@ if [ ! -z "$BEHAT_FEATURE" ]
 then
     echo "feature selected: " + $BEHAT_FEATURE
     # allow to run without filters if its a feature
-    
+
     unset BEHAT_FILTER_TAGS
     unset DIVIDE_INTO_NUM_PARTS
     unset RUN_PART

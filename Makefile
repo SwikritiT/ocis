@@ -38,8 +38,8 @@ help:
 	@echo
 	@echo -e "${GREEN}Testing with test suite in docker:${RESET}\n"
 	@echo -e "${PURPLE}\tdocs: https://owncloud.github.io/ocis/development/testing/#testing-with-test-suite-in-docker${RESET}\n"
-	@echo -e "\tsee ./tests/acceptance/docker-acceptance-runner/Makefile"
-	@echo -e "\tor run ${YELLOW}make -C tests/acceptance/docker-acceptance-runner help${RESET}"
+	@echo -e "\tsee ./tests/acceptance/docker/Makefile"
+	@echo -e "\tor run ${YELLOW}make -C tests/acceptance/docker help${RESET}"
 	@echo
 
 .PHONY: clean-tests

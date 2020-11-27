@@ -39,7 +39,7 @@ COMPOSE_PROJECT_NAME := ocis-acceptance-tests
 help:
 	@echo "Please use 'make <target>' where <target> is one of the following:"
 	@echo
-	@echo -e "${PURPLE}docs: https://owncloud.github.io/ocis/development/building/${RESET}\n"
+	@echo -e "${PURPLE}docs: https://owncloud.github.io/ocis/development/testing/#testing-with-test-suite-in-docker${RESET}\n"
 	@echo
 	@echo -e "oCIS feature tests and test suites can be found here:"
 	@echo -e "\thttps://github.com/owncloud/ocis/tree/master/tests/acceptance/features"
@@ -90,6 +90,10 @@ help:
 	@echo
 	@echo -e "\twhere ${YELLOW}BEHAT_FEATURE='...'${RESET} contains a relative path to the feature definition."
 	@echo -e "\texample: ${RED}tests/acceptance/features/apiAuth/cors.feature${RESET}"
+	@echo
+	@echo
+	@echo -e "${GREEN}Show output of tests:${RESET}\n"
+	@echo -e "\tmake show-test-logs\t\t${BLUE}show output of running or finished tests${RESET}"
 	@echo
 	@echo
 	@echo -e "${GREEN}Clean up after testing:${RESET}\n"
