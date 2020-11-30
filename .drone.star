@@ -1613,3 +1613,31 @@ def pipelineSanityChecks(ctx, pipelines):
       step_name = step["name"]
       if len(step_name) > max_name_length:
         print("Error: step name %s in pipeline %s is longer than 50 characters" %(step_name, pipeline_name))
+
+  # check for non existing depends_on
+  possible_depends = []
+  for pipeline in pipelines:
+    possible_depends.append(pipeline["name"])
+
+  for pipeline in pipelines:
+    if "depends_on" in pipeline.keys():
+      for depends in pipeline["depends_on"]:
+        if not depends in possible_depends:
+          print("Error: depends_on %s for pipeline %s is not defined" %(depends, pipeline["name"]))
+
+  # list used docker images
+  print("")
+  print("List of used docker images:")
+
+  images = {}
+
+  for pipeline in pipelines:
+    for step in pipeline['steps']:
+      image = step["image"]
+      if image in images.keys():
+        images[image] = images[image] + 1
+      else:
+        images[image] = 1
+
+  for image in images.keys():
+    print(" %sx\t%s" %(images[image], image))
