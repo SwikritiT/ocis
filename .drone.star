@@ -193,6 +193,9 @@ def main(ctx):
 
     pipelines = pipelines + [ notify_pipeline ]
 
+
+  pipelineSanityChecks(ctx, pipelines)
+
   return pipelines
 
 def testOcisModules(ctx):
@@ -1705,3 +1708,30 @@ def rebuildBuildArtifactCache(ctx, name, path):
 
 def purgeBuildArtifactCache(ctx, name):
   return genericBuildArtifactCache(ctx, name, 'purge', [])
+
+def pipelineSanityChecks(ctx, pipelines):
+  """pipelineSanityChecks helps the CI developers to find errors before running it
+
+  These sanity checks are only executed on when converting starlark to yaml.
+  Error outputs are only visible when the conversion is done with the drone cli.
+
+  Args:
+    ctx: drone passes a context with information which the pipeline can be adapted to
+    pipelines: pipelines to be checked, no
+    rmally you should run this on the return value of main()
+
+  Returns:
+    none
+  """
+
+  # check if name length of pipeline and steps are exceeded.
+  max_name_length = 50
+  for pipeline in pipelines:
+    pipeline_name = pipeline["name"]
+    if len(pipeline_name) > max_name_length:
+      print("Error: pipeline name %s is longer than 50 characters" %(pipeline_name))
+
+    for step in pipeline["steps"]:
+      step_name = step["name"]
+      if len(step_name) > max_name_length:
+        print("Error: step name %s in pipeline %s is longer than 50 characters" %(step_name, pipeline_name))
