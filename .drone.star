@@ -789,6 +789,7 @@ def dockerRelease(ctx, arch):
         'refs/pull/**',
       ],
     },
+    'volumes': [pipelineVolumeGoWebhippie],
   }
 
 def dockerEos(ctx):
@@ -855,6 +856,7 @@ def dockerEos(ctx):
         'refs/pull/**',
       ],
     },
+    'volumes': [pipelineVolumeGoWebhippie],
   }
 
 def binaryReleases(ctx):
@@ -977,6 +979,7 @@ def binaryRelease(ctx, name):
         'refs/pull/**',
       ],
     },
+    'volumes': [pipelineVolumeGoWebhippie],
   }
 
 def releaseSubmodule(ctx):
@@ -1624,6 +1627,19 @@ def pipelineSanityChecks(ctx, pipelines):
       for depends in pipeline["depends_on"]:
         if not depends in possible_depends:
           print("Error: depends_on %s for pipeline %s is not defined" %(depends, pipeline["name"]))
+
+  # check for non declared volumes
+  for pipeline in pipelines:
+    pipeline_volumes = []
+    if "volumes" in pipeline.keys():
+      for volume in pipeline['volumes']:
+        pipeline_volumes.append(volume['name'])
+
+    for step in pipeline["steps"]:
+      if "volumes" in step.keys():
+        for volume in step["volumes"]:
+          if not volume['name'] in pipeline_volumes:
+            print("Warning: volume %s for step %s is not defined in pipeline %s" %(volume['name'], step['name'], pipeline['name']))
 
   # list used docker images
   print("")
