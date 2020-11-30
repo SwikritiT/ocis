@@ -101,6 +101,18 @@ config = {
   },
 }
 
+stepVolumeGoWebhippie = \
+  {
+  'name': 'gopath',
+  'path': '/srv/app',
+  }
+
+pipelineVolumeGoWebhippie = \
+  {
+  'name': 'gopath',
+  'temp': {},
+  }
+
 def getPipelineNames(pipelines=[]):
   """getPipelineNames returns names of pipelines as a string array
 
@@ -233,12 +245,7 @@ def testOcisModule(ctx, module):
       'commands': [
         'make -C %s vet' % (module),
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-      ],
+      'volumes': [stepVolumeGoWebhippie,],
     },
     {
       'name': 'staticcheck',
@@ -247,12 +254,7 @@ def testOcisModule(ctx, module):
       'commands': [
         'make -C %s staticcheck' % (module),
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-      ],
+      'volumes': [stepVolumeGoWebhippie,],
     },
     {
       'name': 'lint',
@@ -261,12 +263,7 @@ def testOcisModule(ctx, module):
       'commands': [
         'make -C %s lint' % (module),
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-      ],
+      'volumes': [stepVolumeGoWebhippie,],
     },
     {
         'name': 'test',
@@ -276,12 +273,7 @@ def testOcisModule(ctx, module):
           'make -C %s test' % (module),
           'mv %s/coverage.out %s_coverage.out' % (module, module),
         ],
-        'volumes': [
-          {
-            'name': 'gopath',
-            'path': '/srv/app',
-          },
-        ],
+        'volumes': [stepVolumeGoWebhippie,],
       },
       {
         'name': 'coverage-cache',
@@ -324,12 +316,7 @@ def testOcisModule(ctx, module):
         'refs/pull/**',
       ],
     },
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
+    'volumes': [pipelineVolumeGoWebhippie],
   }
 
 def buildOcisBinaryForTesting(ctx):
@@ -352,12 +339,7 @@ def buildOcisBinaryForTesting(ctx):
         'refs/pull/**',
       ],
     },
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
+    'volumes': [pipelineVolumeGoWebhippie],
   }
 
 def uploadCoverage(ctx):
@@ -459,20 +441,10 @@ def localApiTests(ctx, coreBranch = 'master', coreCommit = '', storage = 'ownclo
         'commands': [
           'make test-acceptance-api',
         ],
-        'volumes': [{
-          'name': 'gopath',
-          'path': '/srv/app',
-        }]
       },
     ],
     'services':
       redis(),
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'depends_on': getPipelineNames([buildOcisBinaryForTesting(ctx)]),
     'trigger': {
       'ref': [
@@ -514,21 +486,11 @@ def coreApiTests(ctx, coreBranch = 'master', coreCommit = '', part_number = 1, n
         },
         'commands': [
           'make -C /srv/app/testrunner test-acceptance-api',
-        ],
-        'volumes': [{
-          'name': 'gopath',
-          'path': '/srv/app',
-        }]
+        ]
       },
     ],
     'services':
       redis(),
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'depends_on': getPipelineNames([buildOcisBinaryForTesting(ctx)]),
     'trigger': {
       'ref': [
@@ -638,10 +600,6 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
           'yarn run acceptance-tests-drone'
         ],
         'volumes': [{
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-        {
           'name': 'uploads',
           'path': '/uploads'
         }]
@@ -651,10 +609,6 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
       redis() +
       selenium(),
     'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
       {
         'name': 'uploads',
         'temp': {}
@@ -713,10 +667,6 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
           'make test-acceptance-webui'
         ],
         'volumes': [{
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-        {
           'name': 'uploads',
           'path': '/uploads'
         }],
@@ -744,10 +694,6 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
       },
     ],
     'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
       {
         'name': 'uploads',
         'temp': {}
@@ -835,12 +781,6 @@ def dockerRelease(ctx, arch):
         },
       },
     ],
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'depends_on': getPipelineNames(testOcisModules(ctx) + testPipelines(ctx)),
     'trigger': {
       'ref': [
@@ -907,12 +847,6 @@ def dockerEos(ctx):
           },
         },
       ],
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'depends_on': getPipelineNames(testOcisModules(ctx) + testPipelines(ctx)),
     'trigger': {
       'ref': [
@@ -955,12 +889,6 @@ def binaryRelease(ctx, name):
         'commands': [
           'make -C ocis release-%s' % (name),
         ],
-        'volumes': [
-          {
-            'name': 'gopath',
-            'path': '/srv/app',
-          },
-        ],
       },
       {
         'name': 'finish',
@@ -968,12 +896,6 @@ def binaryRelease(ctx, name):
         'pull': 'always',
         'commands': [
           'make -C ocis release-finish',
-        ],
-        'volumes': [
-          {
-            'name': 'gopath',
-            'path': '/srv/app',
-          },
         ],
         'when': {
           'ref': [
@@ -1047,12 +969,6 @@ def binaryRelease(ctx, name):
         },
       },
     ],
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'depends_on': getPipelineNames(testOcisModules(ctx) + testPipelines(ctx)),
     'trigger': {
       'ref': [
@@ -1097,12 +1013,6 @@ def releaseSubmodule(ctx):
             'refs/tags/*/v*',
           ],
         },
-      },
-    ],
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
       },
     ],
     'depends_on': depends,
@@ -1306,12 +1216,6 @@ def docs(ctx):
         'name': 'generate-config-docs',
         'image': 'webhippie/golang:1.14',
         'commands': generateConfigDocs,
-        'volumes': [
-          {
-            'name': 'gopath',
-            'path': '/srv/app',
-          },
-        ],
       },
       {
         'name': 'prepare',
@@ -1379,12 +1283,6 @@ def docs(ctx):
         },
       },
     ],
-    'volumes': [
-      {
-        'name': 'gopath',
-        'temp': {},
-      },
-    ],
     'trigger': {
       'ref': [
         'refs/heads/master',
@@ -1402,12 +1300,7 @@ def makeGenerate(module):
       'commands': [
         'make -C %s generate' % (module),
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-      ],
+      'volumes': [stepVolumeGoWebhippie,],
     }
   ]
 
@@ -1545,12 +1438,6 @@ def ocisServer(storage, accounts_hash_difficulty = 4):
         'mkdir -p /srv/app/tmp/ocis/storage/users/',
         'ocis/bin/ocis server'
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app'
-        },
-      ]
     },
   ]
 
@@ -1567,10 +1454,6 @@ def cloneCoreRepos(coreBranch, coreCommit):
       ] + ([
         'git checkout %s' % (coreCommit)
       ] if coreCommit != '' else []),
-      'volumes': [{
-        'name': 'gopath',
-        'path': '/srv/app',
-      }]
     }
   ]
 
@@ -1608,12 +1491,7 @@ def build():
       'commands': [
         'make -C ocis build',
       ],
-      'volumes': [
-        {
-          'name': 'gopath',
-          'path': '/srv/app',
-        },
-      ],
+      'volumes': [stepVolumeGoWebhippie,],
     },
   ]
 
