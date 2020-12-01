@@ -130,6 +130,19 @@ pipelineVolumeOC10Tests = \
   'temp': {},
   }
 
+def pipelineDependsOn(pipeline, dependant_pipelines):
+  pipeline['depends_on'] = getPipelineNames(dependant_pipelines)
+  return pipeline
+
+def pipelinesDependsOn(pipelines, dependant_pipelines):
+  pipes = []
+  for pipeline in pipelines:
+    pipeline['depends_on'] = getPipelineNames(dependant_pipelines)
+    pipes.append(pipeline)
+
+  return pipes
+
+
 def getPipelineNames(pipelines=[]):
   """getPipelineNames returns names of pipelines as a string array
 
@@ -156,12 +169,13 @@ def main(ctx):
 
   pipelines = []
 
-  before = \
+  test_pipelines = \
     [ buildOcisBinaryForTesting(ctx) ] + \
     testOcisModules(ctx) + \
-    testPipelines(ctx)
+    testPipelines(ctx) + \
+    [ pipelineDependsOn(purgeBuildArtifactCache(ctx, 'ocis-binary-amd64'), testPipelines(ctx)) ]
 
-  stages = \
+  build_release_pipelines = \
     dockerReleases(ctx) + \
     [dockerEos(ctx)] + \
     binaryReleases(ctx) + \
@@ -193,16 +207,7 @@ def main(ctx):
   or \
   (ctx.build.event != "pull" and '[docs-only]' in (ctx.build.title + ctx.build.message)):
   # [docs-only] is not taken from PR messages, but from commit messages
-
-    docs_pipeline = docs(ctx)
-    docs_pipeline['depends_on'] = []
-    docs_pipelines = [ docs_pipeline ]
-
-    notify_pipeline = notify(ctx)
-    notify_pipeline['depends_on'] = \
-      getPipelineNames(docs_pipelines)
-
-    pipelines = docs_pipelines + [ notify_pipeline ]
+    pipelines = docs(ctx)
 
   else:
     purge_dependencies = testPipelines(ctx)
@@ -222,9 +227,10 @@ def main(ctx):
 
     pipelines = pipelines + [ notify_pipeline ]
 
+  # always append notification step
+  pipelines.append(pipelineDependsOn(notify(ctx), pipelines))
 
   pipelineSanityChecks(ctx, pipelines)
-
   return pipelines
 
 def testOcisModules(ctx):
@@ -1222,11 +1228,6 @@ def refreshDockerBadges(ctx):
   }
 
 def docs(ctx):
-  generateConfigDocs = []
-
-  for module in config['modules']:
-    generateConfigDocs.append('make -C %s config-docs-generate' % (module))
-
   return {
     'kind': 'pipeline',
     'type': 'docker',
@@ -1239,7 +1240,7 @@ def docs(ctx):
       {
         'name': 'generate-config-docs',
         'image': 'webhippie/golang:1.14',
-        'commands': generateConfigDocs,
+        'commands': ['make -C %s config-docs-generate' % (module) for module in config['modules']],
       },
       {
         'name': 'prepare',
