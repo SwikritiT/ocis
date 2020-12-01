@@ -444,7 +444,7 @@ def localApiTests(ctx, coreBranch = 'master', coreCommit = '', storage = 'ownclo
     },
     'steps':
       restoreBuildArtifactCache(ctx, 'ocis-binary-amd64', 'ocis/bin/ocis') +
-      ocisServer(storage, accounts_hash_difficulty) +
+      ocisServer(storage, accounts_hash_difficulty, [stepVolumeOC10Tests]) +
       cloneCoreRepos(coreBranch, coreCommit) + [
       {
         'name': 'localApiTests-%s-%s' % (suite, storage),
@@ -491,7 +491,7 @@ def coreApiTests(ctx, coreBranch = 'master', coreCommit = '', part_number = 1, n
     },
     'steps':
       restoreBuildArtifactCache(ctx, 'ocis-binary-amd64', 'ocis/bin/ocis') +
-      ocisServer(storage, accounts_hash_difficulty) +
+      ocisServer(storage, accounts_hash_difficulty, [stepVolumeOC10Tests]) +
       cloneCoreRepos(coreBranch, coreCommit) + [
       {
         'name': 'oC10ApiTests-%s-storage-%s' % (storage, part_number),
@@ -598,7 +598,7 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
     },
     'steps':
       restoreBuildArtifactCache(ctx, 'ocis-binary-amd64', 'ocis/bin/ocis') +
-      ocisServer(storage, accounts_hash_difficulty) + [
+      ocisServer(storage, accounts_hash_difficulty, [stepVolumeOC10Tests]) + [
       {
         'name': 'webUITests',
         'image': 'owncloudci/nodejs:11',
@@ -626,21 +626,23 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
           'yarn install-all',
           'yarn run acceptance-tests-drone'
         ],
-        'volumes': [{
-          'name': 'uploads',
-          'path': '/uploads'
-        }]
+        'volumes': 
+          [stepVolumeOC10Tests] + 
+          [{
+            'name': 'uploads',
+            'path': '/uploads'
+          }]
       },
     ],
     'services':
       redis() +
       selenium(),
-    'volumes': [
-      {
+    'volumes': 
+      [pipelineVolumeOC10Tests] +
+      [{
         'name': 'uploads',
         'temp': {}
-      }
-    ],
+      }],
     'depends_on': getPipelineNames([buildOcisBinaryForTesting(ctx)]),
     'trigger': {
       'ref': [
@@ -662,7 +664,7 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
     },
     'steps':
       restoreBuildArtifactCache(ctx, 'ocis-binary-amd64', 'ocis/bin/ocis') +
-      ocisServer(storage, accounts_hash_difficulty) + [
+      ocisServer(storage, accounts_hash_difficulty, [stepVolumeOC10Tests]) + [
       {
         'name': 'WebUIAcceptanceTests',
         'image': 'owncloudci/nodejs:11',
@@ -693,10 +695,12 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
           'yarn install --all',
           'make test-acceptance-webui'
         ],
-        'volumes': [{
-          'name': 'uploads',
-          'path': '/uploads'
-        }],
+        'volumes': 
+          [stepVolumeOC10Tests] + 
+          [{
+            'name': 'uploads',
+            'path': '/uploads'
+          }]
       },
     ],
     'services': [
@@ -720,12 +724,12 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
         ],
       },
     ],
-    'volumes': [
-      {
+    'volumes': 
+      [stepVolumeOC10Tests] + 
+      [{
         'name': 'uploads',
         'temp': {}
-      }
-    ],
+      }],
     'depends_on': getPipelineNames([buildOcisBinaryForTesting(ctx)]),
     'trigger': {
       'ref': [
@@ -1109,7 +1113,7 @@ def changelog(ctx):
       },
       {
         'name': 'diff',
-        'image': 'owncloud/alpine:latest',
+        'image': 'owncloudci/alpine:latest',
         'pull': 'always',
         'commands': [
           'git diff',
@@ -1117,7 +1121,7 @@ def changelog(ctx):
       },
       {
         'name': 'output',
-        'image': 'owncloud/alpine:latest',
+        'image': 'owncloudci/alpine:latest',
         'pull': 'always',
         'commands': [
           'cat CHANGELOG.md',
@@ -1341,7 +1345,7 @@ def updateDeployment(ctx):
     'steps': [
       {
         'name': 'webhook',
-        'image': 'plugins/webhook',
+        'image': 'plugins/webhook:1',
         'settings': {
           'username': {
             'from_secret': 'webhook_username',
@@ -1417,7 +1421,7 @@ def frontend(module):
     }
   ]
 
-def ocisServer(storage, accounts_hash_difficulty = 4):
+def ocisServer(storage, accounts_hash_difficulty = 4, volumes=[]):
   environment = {
     #'OCIS_LOG_LEVEL': 'debug',
     'STORAGE_HOME_DRIVER': '%s' % (storage),
@@ -1453,16 +1457,15 @@ def ocisServer(storage, accounts_hash_difficulty = 4):
   return [
     {
       'name': 'ocis-server',
-      'image': 'webhippie/golang:1.14',
+      'image': 'owncloudci/alpine:latest',
       'pull': 'always',
       'detach': True,
       'environment' : environment,
       'commands': [
         'apk add mailcap', # install /etc/mime.types
-        'mkdir -p /srv/app/tmp/ocis/owncloud/data/',
-        'mkdir -p /srv/app/tmp/ocis/storage/users/',
         'ocis/bin/ocis server'
       ],
+      'volumes': volumes,
     },
   ]
 
