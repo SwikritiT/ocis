@@ -101,15 +101,32 @@ config = {
   },
 }
 
+
+# volume for steps to cache Go dependencies betweens steps of a pipeline
+# GOPATH must be set to /srv/app inside the image, which is the case for webhippie/golang
 stepVolumeGoWebhippie = \
   {
   'name': 'gopath',
   'path': '/srv/app',
   }
 
+# volume for pipeline to cache Go dependencies betweens steps of a pipeline
+# to be used in combination with stepVolumeGoWebhippie
 pipelineVolumeGoWebhippie = \
   {
   'name': 'gopath',
+  'temp': {},
+  }
+
+stepVolumeOC10Tests = \
+  {
+  'name': 'oC10Tests',
+  'path': '/srv/app',
+  }
+
+pipelineVolumeOC10Tests = \
+  {
+  'name': 'oC10Tests',
   'temp': {},
   }
 
@@ -441,6 +458,7 @@ def localApiTests(ctx, coreBranch = 'master', coreCommit = '', storage = 'ownclo
         'commands': [
           'make test-acceptance-api',
         ],
+        'volumes': [stepVolumeOC10Tests],
       },
     ],
     'services':
@@ -453,6 +471,7 @@ def localApiTests(ctx, coreBranch = 'master', coreCommit = '', storage = 'ownclo
         'refs/pull/**',
       ],
     },
+    'volumes': [pipelineVolumeOC10Tests],
   }
 
 def coreApiTests(ctx, coreBranch = 'master', coreCommit = '', part_number = 1, number_of_parts = 1, storage = 'owncloud', accounts_hash_difficulty = 4):
@@ -486,7 +505,8 @@ def coreApiTests(ctx, coreBranch = 'master', coreCommit = '', part_number = 1, n
         },
         'commands': [
           'make -C /srv/app/testrunner test-acceptance-api',
-        ]
+        ],
+        'volumes': [stepVolumeOC10Tests],
       },
     ],
     'services':
@@ -499,6 +519,7 @@ def coreApiTests(ctx, coreBranch = 'master', coreCommit = '', part_number = 1, n
         'refs/pull/**',
       ],
     },
+    'volumes': [pipelineVolumeOC10Tests],
   }
 
 def benchmark(ctx):
@@ -1457,6 +1478,7 @@ def cloneCoreRepos(coreBranch, coreCommit):
       ] + ([
         'git checkout %s' % (coreCommit)
       ] if coreCommit != '' else []),
+      'volumes': [stepVolumeOC10Tests],
     }
   ]
 
