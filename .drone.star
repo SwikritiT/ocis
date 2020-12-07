@@ -172,8 +172,7 @@ def main(ctx):
   test_pipelines = \
     [ buildOcisBinaryForTesting(ctx) ] + \
     testOcisModules(ctx) + \
-    testPipelines(ctx) + \
-    [ pipelineDependsOn(purgeBuildArtifactCache(ctx, 'ocis-binary-amd64'), testPipelines(ctx)) ]
+    testPipelines(ctx)
 
   build_release_pipelines = \
     dockerReleases(ctx) + \
@@ -181,7 +180,7 @@ def main(ctx):
     binaryReleases(ctx) + \
     [releaseSubmodule(ctx)]
 
-  after = [
+  build_release_helpers = [
     changelog(ctx),
     docs(ctx),
     refreshDockerBadges(ctx),
@@ -189,18 +188,13 @@ def main(ctx):
   ]
 
   if ctx.build.event == "cron":
-    before.append(benchmark(ctx))
-
-    purge = purgeBuildArtifactCache(ctx, 'ocis-binary-amd64')
-    purge['depends_on'] = getPipelineNames(before)
-
-    before.append(purge)
-
-    notify_pipeline = notify(ctx)
-    notify_pipeline['depends_on'] = \
-      getPipelineNames(before)
-
-    pipelines = before + [ notify_pipeline ]
+    pipelines = test_pipelines + [
+      benchmark(ctx),
+      pipelineDependsOn(
+        purgeBuildArtifactCache(ctx, 'ocis-binary-amd64'),
+        testPipelines(ctx) + [benchmark(ctx)]
+      )
+    ]
 
   elif \
   (ctx.build.event == "pull" and '[docs-only]' in ctx.build.title) \
@@ -210,25 +204,31 @@ def main(ctx):
     pipelines = docs(ctx)
 
   else:
-    purge_dependencies = testPipelines(ctx)
-
     if '[with-benchmarks]' in (ctx.build.title + ctx.build.message):
-      before.append(benchmark(ctx))
-      purge_dependencies.append(benchmark(ctx))
+      test_pipelines += [
+      benchmark(ctx),
+      pipelineDependsOn(
+        purgeBuildArtifactCache(ctx, 'ocis-binary-amd64'),
+        testPipelines(ctx) + [benchmark(ctx)]
+      )
+    ]
+    else:
+      test_pipelines.append(
+        pipelineDependsOn(
+          purgeBuildArtifactCache(ctx, 'ocis-binary-amd64'),
+          testPipelines(ctx)
+        )
+      )
 
-    purge = purgeBuildArtifactCache(ctx, 'ocis-binary-amd64')
-    purge['depends_on'] = getPipelineNames(purge_dependencies)
-
-    pipelines = before + stages + after + [purge]
-
-    notify_pipeline = notify(ctx)
-    notify_pipeline['depends_on'] = \
-      getPipelineNames(pipelines)
-
-    pipelines = pipelines + [ notify_pipeline ]
+    pipelines = test_pipelines + build_release_pipelines + build_release_helpers
 
   # always append notification step
-  pipelines.append(pipelineDependsOn(notify(ctx), pipelines))
+  pipelines.append(
+    pipelineDependsOn(
+      notify(ctx),
+      pipelines
+    )
+  )
 
   pipelineSanityChecks(ctx, pipelines)
   return pipelines
@@ -626,8 +626,8 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
           'yarn install-all',
           'yarn run acceptance-tests-drone'
         ],
-        'volumes': 
-          [stepVolumeOC10Tests] + 
+        'volumes':
+          [stepVolumeOC10Tests] +
           [{
             'name': 'uploads',
             'path': '/uploads'
@@ -637,7 +637,7 @@ def uiTestPipeline(ctx, suiteName, phoenixBranch = 'master', phoenixCommit = '',
     'services':
       redis() +
       selenium(),
-    'volumes': 
+    'volumes':
       [pipelineVolumeOC10Tests] +
       [{
         'name': 'uploads',
@@ -695,8 +695,8 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
           'yarn install --all',
           'make test-acceptance-webui'
         ],
-        'volumes': 
-          [stepVolumeOC10Tests] + 
+        'volumes':
+          [stepVolumeOC10Tests] +
           [{
             'name': 'uploads',
             'path': '/uploads'
@@ -724,8 +724,8 @@ def accountsUITests(ctx, phoenixBranch, phoenixCommit, storage = 'owncloud', acc
         ],
       },
     ],
-    'volumes': 
-      [stepVolumeOC10Tests] + 
+    'volumes':
+      [stepVolumeOC10Tests] +
       [{
         'name': 'uploads',
         'temp': {}
