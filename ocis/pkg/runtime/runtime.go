@@ -39,7 +39,6 @@ var (
 		"konnectd",
 		"ocs",
 		"onlyoffice",
-		"phoenix",
 		"proxy",
 		"settings",
 		"store",
@@ -53,6 +52,7 @@ var (
 		"storage-metadata",
 		"storage-public-link",
 		"thumbnails",
+		"web",
 		"webdav",
 	}
 
