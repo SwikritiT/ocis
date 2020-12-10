@@ -91,7 +91,7 @@ func StorageMetadata(cfg *config.Config) []cli.Flag {
 	flags = append(flags,
 		&cli.StringFlag{
 			Name:        "storage-root",
-			Value:       "/var/tmp/ocis/metadata",
+			Value:       "./data/storage/metadata",
 			Usage:       "the path to the metadata storage root",
 			EnvVars:     []string{"STORAGE_METADATA_ROOT"},
 			Destination: &cfg.Reva.Storages.Common.Root,

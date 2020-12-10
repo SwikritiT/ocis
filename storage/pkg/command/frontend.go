@@ -130,7 +130,7 @@ func Frontend(cfg *config.Config) *cli.Command {
 							},
 							"ocdav": map[string]interface{}{
 								"prefix":           cfg.Reva.Frontend.OCDavPrefix,
-								"chunk_folder":     "/var/tmp/ocis/chunks",
+								"chunk_folder":     "./data/chunks",
 								"files_namespace":  cfg.Reva.OCDav.DavFilesNamespace,
 								"webdav_namespace": cfg.Reva.OCDav.WebdavNamespace,
 								"timeout":          86400,
