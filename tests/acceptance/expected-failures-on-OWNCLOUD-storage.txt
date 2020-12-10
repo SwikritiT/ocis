@@ -479,6 +479,13 @@ apiSharePublicLink1/changingPublicLinkShare.feature:151
 apiSharePublicLink1/changingPublicLinkShare.feature:197
 apiSharePublicLink1/changingPublicLinkShare.feature:244
 #
+# https://github.com/owncloud/product/issues/271 Cannot set mtime on upload
+#
+apiSharePublicLink1/createPublicLinkShare.feature:775
+apiSharePublicLink1/createPublicLinkShare.feature:776
+apiSharePublicLink1/createPublicLinkShare.feature:789
+apiSharePublicLink1/createPublicLinkShare.feature:790
+#
 # https://github.com/owncloud/ocis-reva/issues/292 Public link enforce permissions
 # https://github.com/owncloud/ocis/issues/723 upload-only public link does not refer to files-drop page, nor are the permissions enforced
 #
@@ -897,6 +904,7 @@ apiShareReshareToShares3/reShareWithExpiryDate.feature:273
 #
 # https://github.com/owncloud/product/issues/254 empty trashbin does not work
 # https://github.com/owncloud/ocis/issues/551 delete from trashbin does not work
+# https://github.com/owncloud/product/issues/256 deleting multiple elements concurrently will not delete all the items.
 #
 apiTrashbin/trashbinDelete.feature:31
 apiTrashbin/trashbinDelete.feature:32
@@ -918,7 +926,8 @@ apiTrashbin/trashbinFilesFolders.feature:61
 apiTrashbin/trashbinFilesFolders.feature:105
 apiTrashbin/trashbinFilesFolders.feature:106
 #
-# https://github.com/owncloud/product/issues/273 invalid webdav responses for unauthorized requests.
+# https://github.com/owncloud/product/issues/257
+# trying to list the trashbin of another user gives 405
 #
 apiTrashbin/trashbinFilesFolders.feature:154
 apiTrashbin/trashbinFilesFolders.feature:155
@@ -926,6 +935,9 @@ apiTrashbin/trashbinFilesFolders.feature:172
 apiTrashbin/trashbinFilesFolders.feature:173
 apiTrashbin/trashbinFilesFolders.feature:196
 apiTrashbin/trashbinFilesFolders.feature:197
+#
+# https://github.com/owncloud/product/issues/273 invalid webdav responses for unauthorized requests.
+#
 apiTrashbin/trashbinFilesFolders.feature:210
 apiTrashbin/trashbinFilesFolders.feature:211
 apiTrashbin/trashbinFilesFolders.feature:224
@@ -1188,6 +1200,10 @@ apiWebdavProperties1/copyFile.feature:166
 apiWebdavProperties1/copyFile.feature:202
 apiWebdavProperties1/copyFile.feature:203
 #
+# https://github.com/owncloud/product/issues/262
+# On webdav responses oc:privatelink webdav properties are not returned
+apiWebdavProperties2/getFileProperties.feature:223
+#
 # https://github.com/owncloud/product/issues/293 sharing with group not available
 #
 apiWebdavProperties1/copyFile.feature:350
@@ -1227,6 +1243,17 @@ apiWebdavProperties1/getQuota.feature:78
 #
 apiWebdavProperties1/setFileProperties.feature:63
 apiWebdavProperties1/setFileProperties.feature:64
+#
+# https://github.com/owncloud/product/issues/264
+# cannot set custom webDav properties
+#
+apiWebdavProperties1/setFileProperties.feature:20
+apiWebdavProperties1/setFileProperties.feature:21
+apiWebdavProperties1/setFileProperties.feature:45
+apiWebdavProperties1/setFileProperties.feature:46
+apiWebdavProperties1/setFileProperties.feature:76
+apiWebdavProperties1/setFileProperties.feature:77
+apiWebdavProperties1/setFileProperties.feature:80
 #
 # https://github.com/owncloud/ocis-reva/issues/214 XML properties in webdav response not properly encoded
 #
@@ -1546,6 +1573,58 @@ apiVersions/fileVersionsSharingToShares.feature:267
 #
 apiVersions/fileVersionsSharingToShares.feature:252
 apiVersions/fileVersionsSharingToShares.feature:253
+#
+# https://github.com/owncloud/product/issues/280
+# https://github.com/owncloud/product/issues/240
+#
+# The etags are updated inconsistently on some file operations. The etags are updated sometimes but are not updated other times
+#
+apiWebdavEtagPropagation1/deleteFileFolder.feature:45
+apiWebdavEtagPropagation1/deleteFileFolder.feature:46
+apiWebdavEtagPropagation1/deleteFileFolder.feature:157
+apiWebdavEtagPropagation1/deleteFileFolder.feature:158
+apiWebdavEtagPropagation1/deleteFileFolder.feature:189
+apiWebdavEtagPropagation1/deleteFileFolder.feature:190
+apiWebdavEtagPropagation1/deleteFileFolder.feature:193
+apiWebdavEtagPropagation1/deleteFileFolder.feature:208
+# MOVE operation on folders do not change etags for parents
+apiWebdavEtagPropagation1/moveFileFolder.feature:118
+apiWebdavEtagPropagation1/moveFileFolder.feature:119
+apiWebdavEtagPropagation1/moveFileFolder.feature:209
+apiWebdavEtagPropagation1/moveFileFolder.feature:210
+apiWebdavEtagPropagation1/moveFileFolder.feature:279
+apiWebdavEtagPropagation1/moveFileFolder.feature:280
+#
+apiWebdavEtagPropagation2/copyFileFolder.feature:24
+apiWebdavEtagPropagation2/copyFileFolder.feature:25
+apiWebdavEtagPropagation2/copyFileFolder.feature:45
+apiWebdavEtagPropagation2/copyFileFolder.feature:46
+apiWebdavEtagPropagation2/copyFileFolder.feature:67
+apiWebdavEtagPropagation2/copyFileFolder.feature:68
+apiWebdavEtagPropagation2/copyFileFolder.feature:93
+apiWebdavEtagPropagation2/copyFileFolder.feature:94
+apiWebdavEtagPropagation2/copyFileFolder.feature:120
+apiWebdavEtagPropagation2/copyFileFolder.feature:121
+apiWebdavEtagPropagation2/copyFileFolder.feature:196
+apiWebdavEtagPropagation2/copyFileFolder.feature:197
+# creating a folder inside a folder should change etag of parent
+apiWebdavEtagPropagation2/createFolder.feature:22
+apiWebdavEtagPropagation2/createFolder.feature:23
+apiWebdavEtagPropagation2/createFolder.feature:66
+apiWebdavEtagPropagation2/createFolder.feature:67
+apiWebdavEtagPropagation2/createFolder.feature:91
+apiWebdavEtagPropagation2/createFolder.feature:92
+apiWebdavEtagPropagation2/createFolder.feature:95
+# restoring a version should change etags on parents
+apiWebdavEtagPropagation2/restoreVersion.feature:10
+# uploading a file inside a folder changes the etags of the parents
+apiWebdavEtagPropagation2/upload.feature:23
+apiWebdavEtagPropagation2/upload.feature:24
+apiWebdavEtagPropagation2/upload.feature:66
+apiWebdavEtagPropagation2/upload.feature:67
+apiWebdavEtagPropagation2/upload.feature:90
+apiWebdavEtagPropagation2/upload.feature:91
+apiWebdavEtagPropagation2/upload.feature:144
 #
 # https://github.com/owncloud/product/issues/279 etags are not updated on file operations
 #
@@ -1963,6 +2042,12 @@ apiShareUpdateToShares/updateShare.feature:155
 #
 apiShareCreateSpecialToShares2/createShareDefaultFolderForReceivedShares.feature:21
 apiShareCreateSpecialToShares2/createShareDefaultFolderForReceivedShares.feature:22
+#
+# https://github.com/owncloud/product/issues/276
+#
+# Trying to decline a received share will give status 500 error.
+#
+webUISharingAcceptShares/acceptShares.feature:85
 #
 # Group shares support  https://github.com/owncloud/ocis-reva/issues/194
 #
@@ -2414,3 +2499,7 @@ apiShareManagementBasicToShares/createShareToSharesFolder.feature:612
 # https://github.com/owncloud/ocis/issues/1012 TUS OPTIONS requests does not reply with TUS headers when invalid password
 apiWebdavUploadTUS/optionsRequest.feature:29
 apiWebdavUploadTUS/optionsRequest.feature:40
+
+# https://github.com/owncloud/product/issues/197
+# user is created successfully with empty/no password
+apiProvisioning-v1/addUser.feature:70

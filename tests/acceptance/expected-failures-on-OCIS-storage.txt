@@ -1521,6 +1521,7 @@ apiWebdavEtagPropagation1/deleteFileFolder.feature:208
 # https://github.com/owncloud/product/issues/241 deleting an item updates etags of grandparent but not on parent
 # https://github.com/owncloud/product/issues/243 etags don't change for a share receiver
 #
+apiWebdavEtagPropagation1/deleteFileFolder.feature:11
 apiWebdavEtagPropagation1/deleteFileFolder.feature:95
 apiWebdavEtagPropagation1/deleteFileFolder.feature:96
 apiWebdavEtagPropagation1/deleteFileFolder.feature:125
@@ -1529,6 +1530,16 @@ apiWebdavEtagPropagation1/deleteFileFolder.feature:157
 apiWebdavEtagPropagation1/deleteFileFolder.feature:158
 apiWebdavEtagPropagation1/deleteFileFolder.feature:189
 apiWebdavEtagPropagation1/deleteFileFolder.feature:190
+#
+# https://github.com/owncloud/product/issues/240
+# MOVE operation on folders do not change etags for parents
+#
+apiWebdavEtagPropagation1/moveFileFolder.feature:118
+apiWebdavEtagPropagation1/moveFileFolder.feature:119
+apiWebdavEtagPropagation1/moveFileFolder.feature:209
+apiWebdavEtagPropagation1/moveFileFolder.feature:210
+apiWebdavEtagPropagation1/moveFileFolder.feature:279
+apiWebdavEtagPropagation1/moveFileFolder.feature:280
 #
 # https://github.com/owncloud/product/issues/243 etags don't change for a share receiver
 #
