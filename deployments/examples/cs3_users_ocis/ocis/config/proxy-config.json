@@ -65,14 +65,6 @@
           "backend": "http://localhost:9140"
         },
         {
-          "endpoint": "/api/v0/accounts",
-          "backend": "http://localhost:9181"
-        },
-        {
-          "endpoint": "/accounts.js",
-          "backend": "http://localhost:9181"
-        },
-        {
           "endpoint": "/api/v0/settings",
           "backend":  "http://localhost:9190"
         },
