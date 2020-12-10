@@ -2,11 +2,56 @@
 version: "3.7"
 
 services:
+  traefik:
+    image: "traefik:v2.3"
+    networks:
+      default:
+        aliases:
+          - ${OCIS_DOMAIN:-ocis.owncloud.test}
+    command:
+      #- "--log.level=DEBUG"
+      - "--certificatesResolvers.http.acme.email=${TRAEFIK_ACME_MAIL:-'example@example.org'}"
+      - "--certificatesResolvers.http.acme.storage=/certs/acme.json"
+      - "--certificatesResolvers.http.acme.httpChallenge.entryPoint=http"
+      - "--api.dashboard=true"
+      - "--entryPoints.http.address=:80"
+      - "--entryPoints.https.address=:443"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "certs:/certs"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN:-traefik.owncloud.test}`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS:-admin:$apr1$4vqie50r$YQAmQdtmz5n9rEALhxJ4l.}" # defaults to admin:admin
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`${TRAEFIK_DOMAIN:-traefik.owncloud.test}`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=http"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+    restart: always
+
   ocis:
     image: owncloud/ocis:latest
+    entrypoint:
+      - /bin/sh
+      - -c
+      - | # as long as https://github.com/owncloud/product/issues/15 is open we need this step to template konnectd config
+        cp /config/identifier-registration.dist.yaml /config/identifier-registration.yaml
+        sed -i 's/ocis.owncloud.test/${OCIS_DOMAIN:-ocis.owncloud.test}/g' /config/identifier-registration.yaml
+        ocis server
     depends_on:
       - ldap-server
     environment:
+      # CS3 users frpm ldap specific config
       PROXY_CONFIG_FILE: "/config/proxy-config.json"
       LDAP_FILTER: "(&(objectclass=inetOrgPerson)(objectClass=owncloud))"
       LDAP_URI: ldap://ldap-server:389
@@ -27,10 +72,57 @@ services:
       STORAGE_LDAP_ATTRIBUTEFILTER: '(&(objectclass=owncloud)({{attr}}={{value}}))'
       STORAGE_LDAP_FINDFILTER: '(&(objectclass=owncloud)(|(uid={{query}}*)(cn={{query}}*)(displayname={{query}}*)(mail={{query}}*)(description={{query}}*)))'
       STORAGE_LDAP_GROUPFILTER: '(&(objectclass=groupOfUniqueNames)(objectclass=owncloud)(ownclouduuid={{.OpaqueId}}*))'
+
+      # General ocis config
+      OCIS_DOMAIN: ${OCIS_DOMAIN:-ocis.owncloud.test}
+      OCIS_LOG_LEVEL: error
+      # proxy config
+      PROXY_AUTOPROVISION_ACCOUNTS: "true"
+      PROXY_OIDC_INSECURE: "${INSECURE:-false}"
+      PROXY_OIDC_ISSUER: https://${OCIS_DOMAIN:-ocis.owncloud.test}
+      PROXY_TLS: "false"
+      # phoenix config
+      PHOENIX_OIDC_AUTHORITY: https://${OCIS_DOMAIN:-ocis.owncloud.test}
+      PHOENIX_OIDC_METADATA_URL: https://${OCIS_DOMAIN:-ocis.owncloud.test}/.well-known/openid-configuration
+      PHOENIX_WEB_CONFIG_APPS: files,draw-io,markdown-editor,media-viewer
+      PHOENIX_WEB_CONFIG_SERVER: https://${OCIS_DOMAIN:-ocis.owncloud.test}
+      # storage config
+      STORAGE_DATAGATEWAY_PUBLIC_URL: https://${OCIS_DOMAIN:-ocis.owncloud.test}/data
+      STORAGE_FRONTEND_PUBLIC_URL: https://${OCIS_DOMAIN:-ocis.owncloud.test}/
+      STORAGE_OIDC_ISSUER: https://${OCIS_DOMAIN:-ocis.owncloud.test}
+      STORAGE_METADATA_ROOT: /opt/ocis-metadata
+      STORAGE_DRIVER_OCIS_ROOT: /opt/ocis-storage
+      # store config
+      STORE_DATA_PATH: /opt/ocis-store
+      # settings config
+      SETTINGS_DATA_PATH: /opt/ocis-settings
+      # idp config
+      KONNECTD_ISS: https://${OCIS_DOMAIN:-ocis.owncloud.test}
+      KONNECTD_TLS: 'false'
     ports:
       - "9200:9200"
+    networks:
+      default:
     volumes:
-      - ./ocis/config/proxy-config.json:/config/proxy-config.json
+      - ./ocis/config:/config
+      - ocis-storage:/opt/ocis-storage
+      - ocis-metadata:/opt/ocis-metadata
+      - ocis-store:/opt/ocis-store
+      - ocis-settings:/opt/ocis-settings
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ocis.entrypoints=http"
+      - "traefik.http.routers.ocis.rule=Host(`${OCIS_DOMAIN:-ocis.owncloud.test}`)"
+      - "traefik.http.middlewares.ocis-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.ocis.middlewares=ocis-https-redirect"
+      - "traefik.http.routers.ocis-secure.entrypoints=https"
+      - "traefik.http.routers.ocis-secure.rule=Host(`${OCIS_DOMAIN:-ocis.owncloud.test}`)"
+      - "traefik.http.routers.ocis-secure.tls=true"
+      - "traefik.http.routers.ocis-secure.tls.certresolver=http"
+      - "traefik.http.routers.ocis-secure.service=ocis"
+      - "traefik.http.services.ocis.loadbalancer.server.port=9200"
+    restart: always
+
 
   ldap-server:
     image: osixia/openldap:latest
@@ -45,6 +137,14 @@ services:
     ports:
       - "389:389"
       - "636:636"
+    networks:
+      default:
     volumes:
       - ./ldap/ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom
 
+volumes:
+  certs:
+  ocis-storage:
+  ocis-metadata:
+  ocis-store:
+  ocis-settings:
