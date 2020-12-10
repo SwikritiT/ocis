@@ -1,9 +1,9 @@
-dn: ou=users,dc=owncloud,dc=com
+dn: ou=users,dc=owncloud,dc=test
 objectClass: organizationalUnit
 ou: users
 
 # Start dn with uid (user identifier / login), not cn (Firstname + Surname)
-dn: uid=einstein,ou=users,dc=owncloud,dc=com
+dn: uid=einstein,ou=users,dc=owncloud,dc=test
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: ownCloud
@@ -23,7 +23,7 @@ homeDirectory: /home/einstein
 ownCloudUUID:: NGM1MTBhZGEtYzg2Yi00ODE1LTg4MjAtNDJjZGY4MmMzZDUx
 userPassword:: e1NTSEF9TXJEcXpFNGdKbXZxbVRVTGhvWEZ1VzJBbkV3NWFLK3J3WTIvbHc9PQ==
 
-dn: uid=marie,ou=users,dc=owncloud,dc=com
+dn: uid=marie,ou=users,dc=owncloud,dc=test
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: ownCloud
@@ -43,7 +43,7 @@ homeDirectory: /home/marie
 ownCloudUUID:: ZjdmYmY4YzgtMTM5Yi00Mzc2LWIzMDctY2YwYThjMmQwZDlj
 userPassword:: e1NTSEF9UmFvQWs3TU9jRHBIUWY3bXN3MGhHNnVraFZQWnRIRlhOSUNNZEE9PQ==
 
-dn: uid=richard,ou=users,dc=owncloud,dc=com
+dn: uid=richard,ou=users,dc=owncloud,dc=test
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: ownCloud

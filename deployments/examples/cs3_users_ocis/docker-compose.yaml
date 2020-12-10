@@ -40,7 +40,7 @@ services:
     restart: always
 
   ocis:
-    image: owncloud/ocis:latest
+    image: owncloud/ocis:${OCIS_DOCKER_TAG:-latest}
     entrypoint:
       - /bin/sh
       - -c
@@ -55,24 +55,23 @@ services:
       PROXY_CONFIG_FILE: "/config/proxy-config.json"
       LDAP_FILTER: "(&(objectclass=inetOrgPerson)(objectClass=owncloud))"
       LDAP_URI: ldap://ldap-server:389
-      LDAP_BINDDN: "cn=admin,dc=owncloud,dc=com"
-      LDAP_BINDPW: admin
-      LDAP_BASEDN: "dc=owncloud,dc=com"
+      LDAP_BINDDN: "cn=admin,dc=owncloud,dc=test"
+      LDAP_BINDPW: ${LDAP_ADMIN_PASSWORD:-admin}
+      LDAP_BASEDN: "dc=owncloud,dc=test"
       LDAP_LOGIN_ATTRIBUTE: uid
       LDAP_UUID_ATTRIBUTE: "ownclouduuid"
       LDAP_UUID_ATTRIBUTE_TYPE: binary
       PROXY_ACCOUNT_BACKEND_TYPE: cs3
       STORAGE_LDAP_HOSTNAME: ldap-server
       STORAGE_LDAP_PORT: 636
-      STORAGE_LDAP_BASE_DN: "dc=owncloud,dc=com"
-      STORAGE_LDAP_BIND_DN: "cn=admin,dc=owncloud,dc=com"
-      STORAGE_LDAP_BIND_PASSWORD: admin
+      STORAGE_LDAP_BASE_DN: "dc=owncloud,dc=test"
+      STORAGE_LDAP_BIND_DN: "cn=admin,dc=owncloud,dc=test"
+      STORAGE_LDAP_BIND_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
       STORAGE_LDAP_LOGINFILTER: '(&(objectclass=inetOrgPerson)(objectclass=owncloud)(|(uid={{login}})(mail={{login}})))'
       STORAGE_LDAP_USERFILTER: '(&(objectclass=inetOrgPerson)(objectclass=owncloud)(|(ownclouduuid={{.OpaqueId}})(uid={{.OpaqueId}})))'
       STORAGE_LDAP_ATTRIBUTEFILTER: '(&(objectclass=owncloud)({{attr}}={{value}}))'
       STORAGE_LDAP_FINDFILTER: '(&(objectclass=owncloud)(|(uid={{query}}*)(cn={{query}}*)(displayname={{query}}*)(mail={{query}}*)(description={{query}}*)))'
       STORAGE_LDAP_GROUPFILTER: '(&(objectclass=groupOfUniqueNames)(objectclass=owncloud)(ownclouduuid={{.OpaqueId}}*))'
-
       # General ocis config
       OCIS_DOMAIN: ${OCIS_DOMAIN:-ocis.owncloud.test}
       OCIS_LOG_LEVEL: error
@@ -90,25 +89,12 @@ services:
       STORAGE_DATAGATEWAY_PUBLIC_URL: https://${OCIS_DOMAIN:-ocis.owncloud.test}/data
       STORAGE_FRONTEND_PUBLIC_URL: https://${OCIS_DOMAIN:-ocis.owncloud.test}/
       STORAGE_OIDC_ISSUER: https://${OCIS_DOMAIN:-ocis.owncloud.test}
-      STORAGE_METADATA_ROOT: /opt/ocis-metadata
-      STORAGE_DRIVER_OCIS_ROOT: /opt/ocis-storage
-      # store config
-      STORE_DATA_PATH: /opt/ocis-store
-      # settings config
-      SETTINGS_DATA_PATH: /opt/ocis-settings
       # idp config
       KONNECTD_ISS: https://${OCIS_DOMAIN:-ocis.owncloud.test}
       KONNECTD_TLS: 'false'
-    ports:
-      - "9200:9200"
-    networks:
-      default:
     volumes:
-      - ./ocis/config:/config
-      - ocis-storage:/opt/ocis-storage
-      - ocis-metadata:/opt/ocis-metadata
-      - ocis-store:/opt/ocis-store
-      - ocis-settings:/opt/ocis-settings
+      - ./config/ocis:/config
+      - ocis-data:/var/tmp/ocis
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ocis.entrypoints=http"
@@ -123,28 +109,39 @@ services:
       - "traefik.http.services.ocis.loadbalancer.server.port=9200"
     restart: always
 
-
   ldap-server:
     image: osixia/openldap:latest
     command: --copy-service --loglevel debug
     environment:
       LDAP_TLS_VERIFY_CLIENT: never
-      LDAP_DOMAIN: owncloud.com
+      LDAP_DOMAIN: owncloud.test
       LDAP_ORGANISATION: ownCloud
-      LDAP_ADMIN_PASSWORD: admin
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
       LDAP_RFC2307BIS_SCHEMA: "true"
       LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
-    ports:
-      - "389:389"
-      - "636:636"
-    networks:
-      default:
     volumes:
-      - ./ldap/ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      - ./config/ldap/ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom
+    restart: always
+
+  ldap-manager:
+    image: osixia/phpldapadmin:0.9.0
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap-server
+      PHPLDAPADMIN_HTTPS: "false"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ldap-manager.entrypoints=http"
+      - "traefik.http.routers.ldap-manager.rule=Host(`${LDAP_MANAGER_DOMAIN:-ldap.owncloud.test}`)"
+      - "traefik.http.middlewares.ldap-manager-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.ldap-manager.middlewares=ldap-manager-https-redirect"
+      - "traefik.http.routers.ldap-manager-secure.entrypoints=https"
+      - "traefik.http.routers.ldap-manager-secure.rule=Host(`${LDAP_MANAGER_DOMAIN:-ldap.owncloud.test}`)"
+      - "traefik.http.routers.ldap-manager-secure.tls=true"
+      - "traefik.http.routers.ldap-manager-secure.tls.certresolver=http"
+      - "traefik.http.routers.ldap-manager-secure.service=ldap-manager"
+      - "traefik.http.services.ldap-manager.loadbalancer.server.port=80"
+    restart: always
 
 volumes:
   certs:
-  ocis-storage:
-  ocis-metadata:
-  ocis-store:
-  ocis-settings:
+  ocis-data:

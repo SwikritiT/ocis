@@ -2,18 +2,14 @@
   "HTTP": {
     "Namespace": "com.owncloud"
   },
-  "oidc": {
-    "issuer": "https://localhost:9200",
-    "insecure": true
-  },
   "policy_selector": {
     "static": {
-      "policy": "reva"
+      "policy": "ocis"
     }
   },
   "policies": [
     {
-      "name": "reva",
+      "name": "ocis",
       "routes": [
         {
           "endpoint": "/",
