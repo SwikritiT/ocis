@@ -117,7 +117,7 @@ test-ocis-feature-owncloud-storage: ## test a ocis feature with oc10 storage, us
 
 .PHONY: test-oc10-feature-ocis-storage
 test-oc10-feature-ocis-storage: ## test a oC10 feature with oCIS storage, useage: make ... BEHAT_FEATURE='tests/acceptance/features/apiAuth/cors.feature'
-	@TEST_SOURCE=ocis \
+	@TEST_SOURCE=oc10 \
 	STORAGE=ocis \
 	BEHAT_FEATURE=$(BEHAT_FEATURE) \
 	$(MAKE) --no-print-directory testSuite
@@ -176,7 +176,7 @@ $(targets):
 	$(MAKE) --no-print-directory testSuite
 
 .PHONY: testSuite
-testSuite:
+testSuite: clean-docker-container
 	@COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) \
 	COMPOSE_FILE=$(COMPOSE_FILE) \
 	STORAGE=$(STORAGE) \
