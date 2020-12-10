@@ -80,13 +80,13 @@ help:
 	@echo -e "\texample: ${RED}tests/acceptance/features/apiOcisSpecific/apiAuthOcs-ocsDELETEAuth.feature${RESET}"
 	@echo
 	@echo -e "${GREEN}Run an ownCloud feature test against oCIS with oCIS storage:${RESET}\n"
-	@echo -e "\tmake test-owncloud-feature-ocis-storage ${YELLOW}BEHAT_FEATURE='...'${RESET}\t${BLUE}run single feature test${RESET}"
+	@echo -e "\tmake test-oc10-feature-ocis-storage ${YELLOW}BEHAT_FEATURE='...'${RESET}\t${BLUE}run single feature test${RESET}"
 	@echo
 	@echo -e "\twhere ${YELLOW}BEHAT_FEATURE='...'${RESET} contains a relative path to the feature definition."
 	@echo -e "\texample: ${RED}tests/acceptance/features/apiAuth/cors.feature${RESET}"
 	@echo
 	@echo -e "${GREEN}Run an ownCloud feature test against oCIS with owncloud storage:${RESET}\n"
-	@echo -e "\tmake test-owncloud-feature-ocis-owncloud ${YELLOW}BEHAT_FEATURE='...'${RESET}\t${BLUE}run single feature test${RESET}"
+	@echo -e "\tmake test-oc10-feature-owncloud-storage ${YELLOW}BEHAT_FEATURE='...'${RESET}\t${BLUE}run single feature test${RESET}"
 	@echo
 	@echo -e "\twhere ${YELLOW}BEHAT_FEATURE='...'${RESET} contains a relative path to the feature definition."
 	@echo -e "\texample: ${RED}tests/acceptance/features/apiAuth/cors.feature${RESET}"
