@@ -1546,6 +1546,7 @@ def ocisServer(storage, accounts_hash_difficulty = 4):
     'KONNECTD_ISS': 'https://ocis-server:9200',
     'KONNECTD_TLS': 'true',
     'OCIS_LOG_LEVEL': 'warn',
+    'ACCOUNTS_DATA_PATH': '/var/tmp/ocis-accounts',
   }
 
   # Pass in "default" accounts_hash_difficulty to not set this environment variable.
