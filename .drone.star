@@ -1564,8 +1564,10 @@ def ocisServer(storage, accounts_hash_difficulty = 4):
       'environment' : environment,
       'commands': [
         'apk add mailcap', # install /etc/mime.types
-        'mkdir -p /srv/app/tmp/ocis/owncloud/data/',
-        'mkdir -p /srv/app/tmp/ocis/storage/users/',
+        'mkdir -p $STORAGE_DRIVER_OWNCLOUD_DATADIR',
+        'mkdir -p $STORAGE_DRIVER_OCIS_ROOT',
+        'mkdir -p $STORAGE_DRIVER_LOCAL_ROOT',
+        'mkdir -p $STORAGE_METADATA_ROOT',
         'ocis/bin/ocis server'
       ],
       'volumes': [
