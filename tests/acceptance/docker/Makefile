@@ -19,7 +19,7 @@ COMPOSE_FILE ?= src/redis.yml:src/ocis-base.yml:src/acceptance.yml
 BEHAT_FEATURE ?=
 
 CORE_BRANCH ?= master
-CORE_COMMIT ?= 31105a0d3e6e6ef0a0da2c16c66d4261fd91c069
+CORE_COMMIT ?= 52105a981c0c74fc81c84218e9076d443b06f074
 
 ifdef OCIS_IMAGE_TAG
 	COMPOSE_FILE := $(COMPOSE_FILE):src/ocis-image.yml
